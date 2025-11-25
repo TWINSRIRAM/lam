@@ -10,29 +10,38 @@ const SERVO_UUID = {
   characteristic: "0000bbbc-0000-1000-8000-00805f9b34fb",
 };
 
+const christmasQuotes = [
+  "🎄 Joy to the World!",
+  "⛄ Let it Snow!",
+  "🎅 Ho Ho Ho!",
+  "🎁 Merry Christmas!",
+  "❄️ Warm wishes to you",
+  "🕯️ Peace on Earth",
+  "✨ Magic is in the air",
+  "🔔 Season's Greetings",
+];
+
 export default function App() {
   const [dirDev, setDirDev] = useState(null);
   const [servoDev, setServoDev] = useState(null);
-
   const [angles, setAngles] = useState([90, 90, 90, 90, 90]);
-  const [isLandscape, setIsLandscape] = useState(true);
-
-  // ----------- ORIENTATION CHECK -----------
-  const checkOrientation = () => {
-    if (window.innerWidth > window.innerHeight) {
-      setIsLandscape(true);
-    } else {
-      setIsLandscape(false);
-    }
-  };
+  const [quote, setQuote] = useState(christmasQuotes[0]);
 
   useEffect(() => {
-    checkOrientation();
-    window.addEventListener("resize", checkOrientation);
-    return () => window.removeEventListener("resize", checkOrientation);
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock("landscape").catch(() => {
+        console.log("Orientation lock not supported");
+      });
+    }
+    
+    // Rotate quotes every 5 seconds
+    const interval = setInterval(() => {
+      setQuote(christmasQuotes[Math.floor(Math.random() * christmasQuotes.length)]);
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
-  // ----------- BLE CONNECTIONS -----------
   async function connectDirection() {
     try {
       const device = await navigator.bluetooth.requestDevice({
@@ -42,7 +51,7 @@ export default function App() {
       const service = await server.getPrimaryService(DIRECTION_UUID.service);
       const char = await service.getCharacteristic(DIRECTION_UUID.characteristic);
       setDirDev(char);
-      alert("Direction ESP Connected!");
+      alert("🎅 Direction ESP Connected!");
     } catch (e) {
       console.error(e);
     }
@@ -57,13 +66,12 @@ export default function App() {
       const service = await server.getPrimaryService(SERVO_UUID.service);
       const char = await service.getCharacteristic(SERVO_UUID.characteristic);
       setServoDev(char);
-      alert("Servo ESP Connected!");
+      alert("🎄 Servo ESP Connected!");
     } catch (e) {
       console.error(e);
     }
   }
 
-  // ----------- SEND COMMANDS -----------
   async function sendDirection(cmd) {
     if (!dirDev) return alert("Direction ESP not connected!");
     await dirDev.writeValue(new Uint8Array([cmd]));
@@ -81,30 +89,6 @@ export default function App() {
     sendAngles(newA);
   }
 
-  // ----------- PORTRAIT BLOCK SCREEN -----------
-  if (!isLandscape) {
-    return (
-      <div
-        style={{
-          height: "100vh",
-          width: "100vw",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "24px",
-          fontWeight: "bold",
-          textAlign: "center",
-          background: "#111",
-          color: "white",
-          padding: 20,
-        }}
-      >
-        Rotate your phone to <br /> LANDSCAPE MODE 📱↔️
-      </div>
-    );
-  }
-
-  // ----------- MAIN LANDSCAPE UI -----------
   return (
     <div
       style={{
@@ -112,189 +96,368 @@ export default function App() {
         width: "100vw",
         overflow: "hidden",
         display: "flex",
-        flexDirection: "row",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        padding: 10,
-        gap: 10,
+        flexDirection: "column",
+        background: "linear-gradient(135deg, #0f3d1a 0%, #c41e3a 50%, #0f3d1a 100%)",
+        fontFamily: "'Arial', sans-serif",
       }}
     >
-      {/* LEFT: SERVO SLIDERS */}
-      <div style={{ 
-        flex: 1,
-        background: "rgba(255,255,255,0.95)", 
-        borderRadius: 16,
-        padding: 15,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
+      {/* TOP FESTIVE HEADER */}
+      <div style={{
+        background: "linear-gradient(90deg, #c41e3a 0%, #ffd700 50%, #c41e3a 100%)",
+        padding: "6px 16px",
+        textAlign: "center",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+        borderBottom: "3px solid #0f3d1a",
       }}>
-        <h2 style={{ margin: "0 0 12px 0", color: "#333", fontSize: 20 }}>🎛️ Servo Control</h2>
-
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {angles.map((a, i) => (
-            <div key={i} style={{ 
-              marginBottom: 10,
-              padding: 10,
-              background: "#f8f9fa",
-              borderRadius: 10,
-              border: "2px solid #e9ecef",
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <strong style={{ color: "#495057", fontSize: 14 }}>Motor {i + 1}</strong>
-                <span style={{ 
-                  background: "#667eea",
-                  color: "white",
-                  padding: "2px 10px",
-                  borderRadius: 20,
-                  fontSize: 13,
-                  fontWeight: "bold"
-                }}>{a}°</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="180"
-                value={a}
-                style={{ 
-                  width: "100%",
-                  height: 6,
-                  borderRadius: 4,
-                  outline: "none",
-                  background: `linear-gradient(to right, #667eea 0%, #667eea ${(a/180)*100}%, #e9ecef ${(a/180)*100}%, #e9ecef 100%)`,
-                }}
-                onChange={(e) => updateAngle(i, e.target.value)}
-              />
-            </div>
-          ))}
+        <div style={{ fontSize: 14, fontWeight: "bold", color: "#0f3d1a", letterSpacing: 1 }}>
+          🎄 ✨ 🎅 CHRISTMAS REMOTE ✨ 🎄
         </div>
-
-        <button onClick={connectServo} style={{...connectBtn, background: "#667eea"}}>
-          🔌 Connect Servo ESP
-        </button>
+        <div style={{
+          fontSize: 12,
+          color: "#fff",
+          marginTop: 2,
+          fontStyle: "italic",
+          fontWeight: "bold",
+          animation: "pulse 2s infinite",
+        }}>
+          {quote}
+        </div>
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+          }
+        `}</style>
       </div>
 
-      {/* RIGHT: DIRECTION PAD */}
-      <div style={{ 
-        width: "45%",
-        background: "rgba(255,255,255,0.95)",
-        borderRadius: 16,
-        padding: 15,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <h2 style={{ margin: "0 0 10px 0", color: "#333", fontSize: 20 }}>🎮 Movement Control</h2>
-
+      {/* MAIN CONTENT */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          flex: 1,
+          padding: "8px",
+          gap: "8px",
+          overflow: "hidden",
+        }}
+      >
+        {/* LEFT: SERVO SLIDERS */}
         <div style={{ 
+          flex: 1,
+          background: "rgba(255, 255, 255, 0.96)", 
+          borderRadius: 16,
+          padding: "12px",
+          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+          display: "flex",
+          flexDirection: "column",
+          border: "3px solid #c41e3a",
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Decorative corner ornaments */}
+          <div style={{
+            position: "absolute",
+            top: -5,
+            left: -5,
+            fontSize: 30,
+            opacity: 0.3,
+          }}>🎄</div>
+          <div style={{
+            position: "absolute",
+            bottom: -5,
+            right: -5,
+            fontSize: 30,
+            opacity: 0.3,
+          }}>⛄</div>
+
+          <h2 style={{ 
+            margin: "0 0 10px 0", 
+            color: "#0f3d1a", 
+            fontSize: 18,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}>🎄 Motor Magic 🎁</h2>
+
+          <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+            {angles.map((a, i) => (
+              <div key={i} style={{ 
+                marginBottom: 10,
+                padding: "10px",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #fef2f2 100%)",
+                borderRadius: "10px",
+                border: "2px solid #c41e3a",
+                boxShadow: "0 2px 8px rgba(196, 30, 58, 0.1)",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, alignItems: "center" }}>
+                  <strong style={{ color: "#0f3d1a", fontSize: 13 }}>
+                    {i === 0 ? "🎅" : i === 1 ? "❄️" : i === 2 ? "🎄" : i === 3 ? "⛄" : "🎁"} Motor {i + 1}
+                  </strong>
+                  <span style={{ 
+                    background: "linear-gradient(135deg, #c41e3a 0%, #8b1428 100%)",
+                    color: "white",
+                    padding: "4px 12px",
+                    borderRadius: 20,
+                    fontSize: 12,
+                    fontWeight: "bold",
+                    boxShadow: "0 2px 6px rgba(196, 30, 58, 0.3)",
+                  }}>{a}°</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="180"
+                  value={a}
+                  style={{ 
+                    width: "100%",
+                    height: 6,
+                    borderRadius: 4,
+                    outline: "none",
+                    background: `linear-gradient(to right, #c41e3a 0%, #c41e3a ${(a/180)*100}%, #e0e0e0 ${(a/180)*100}%, #e0e0e0 100%)`,
+                    cursor: "pointer",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                  }}
+                  onChange={(e) => updateAngle(i, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <button onClick={connectServo} style={{
+            padding: "10px 16px",
+            border: "2px solid #0f3d1a",
+            borderRadius: "10px",
+            fontSize: 13,
+            fontWeight: "bold",
+            cursor: "pointer",
+            color: "white",
+            background: "linear-gradient(135deg, #0f3d1a 0%, #1a3d2a 100%)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            transition: "all 0.3s ease",
+            marginTop: 8,
+          }}
+          onMouseDown={(e) => e.target.style.transform = "scale(0.98)"}
+          onMouseUp={(e) => e.target.style.transform = "scale(1)"}
+          >
+            🔌 Connect Servos 🔌
+          </button>
+        </div>
+
+        {/* RIGHT: DIRECTION PAD */}
+        <div style={{ 
+          width: "48%",
+          background: "rgba(255, 255, 255, 0.96)",
+          borderRadius: 16,
+          padding: "12px",
+          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 6,
-          flex: 1,
-          justifyContent: "center",
+          justifyContent: "space-between",
+          border: "3px solid #0f3d1a",
+          position: "relative",
+          overflow: "hidden",
         }}>
-          <button
-            onClick={() => sendDirection(1)}
-            style={{...btnStyle, background: "#10b981"}}
-            onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
-            onMouseUp={(e) => e.target.style.transform = "scale(1)"}
-            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
-          >
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="white">
-              <path d="M12 4l-8 8h5v8h6v-8h5z"/>
-            </svg>
-          </button>
+          {/* Decorative corner ornaments */}
+          <div style={{
+            position: "absolute",
+            top: -5,
+            right: -5,
+            fontSize: 30,
+            opacity: 0.3,
+          }}>🎁</div>
+          <div style={{
+            position: "absolute",
+            bottom: -5,
+            left: -5,
+            fontSize: 30,
+            opacity: 0.3,
+          }}>🔔</div>
 
-          <div style={{ display: "flex", gap: 6 }}>
-            <button 
-              onClick={() => sendDirection(2)} 
-              style={{...btnStyle, background: "#3b82f6"}}
+          <h2 style={{ 
+            margin: "0 0 8px 0", 
+            color: "#c41e3a", 
+            fontSize: 18,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}>🎮 Merry Control 🎅</h2>
+
+          <div style={{ 
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 6,
+            flex: 1,
+            justifyContent: "center",
+          }}>
+            {/* UP */}
+            <button
+              onClick={() => sendDirection(1)}
+              style={{
+                width: 70,
+                height: 70,
+                borderRadius: "12px",
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(135deg, #0f3d1a 0%, #1a5d2a 100%)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: 28,
+                fontWeight: "bold",
+              }}
               onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
               onMouseUp={(e) => e.target.style.transform = "scale(1)"}
               onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+              title="Up"
             >
-              <svg width="35" height="35" viewBox="0 0 24 24" fill="white">
-                <path d="M20 12l-8-8v5H4v6h8v5z"/>
-              </svg>
+              ⬆️
             </button>
-            
-            <button 
-              onClick={() => sendDirection(0)} 
-              style={{...btnStyle, background: "#ef4444", width: 75, height: 75}}
+
+            {/* CENTER ROW */}
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {/* LEFT */}
+              <button 
+                onClick={() => sendDirection(2)} 
+                style={{
+                  width: 70,
+                  height: 70,
+                  borderRadius: "12px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #0f3d1a 0%, #1a5d2a 100%)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 28,
+                  fontWeight: "bold",
+                }}
+                onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
+                onMouseUp={(e) => e.target.style.transform = "scale(1)"}
+                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                title="Left"
+              >
+                ⬅️
+              </button>
+              
+              {/* CENTER STOP */}
+              <button 
+                onClick={() => sendDirection(0)} 
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: "16px",
+                  border: "3px solid white",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #c41e3a 0%, #8b1428 100%)",
+                  boxShadow: "0 6px 20px rgba(196, 30, 58, 0.4)",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold",
+                  fontSize: 32,
+                }}
+                onMouseDown={(e) => e.target.style.transform = "scale(0.93)"}
+                onMouseUp={(e) => e.target.style.transform = "scale(1)"}
+                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                title="Stop"
+              >
+                ⏹️
+              </button>
+              
+              {/* RIGHT */}
+              <button 
+                onClick={() => sendDirection(3)} 
+                style={{
+                  width: 70,
+                  height: 70,
+                  borderRadius: "12px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #0f3d1a 0%, #1a5d2a 100%)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 28,
+                  fontWeight: "bold",
+                }}
+                onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
+                onMouseUp={(e) => e.target.style.transform = "scale(1)"}
+                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                title="Right"
+              >
+                ➡️
+              </button>
+            </div>
+
+            {/* DOWN */}
+            <button
+              onClick={() => sendDirection(4)}
+              style={{
+                width: 70,
+                height: 70,
+                borderRadius: "12px",
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(135deg, #0f3d1a 0%, #1a5d2a 100%)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: 28,
+                fontWeight: "bold",
+              }}
               onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
               onMouseUp={(e) => e.target.style.transform = "scale(1)"}
               onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+              title="Down"
             >
-              <svg width="45" height="45" viewBox="0 0 24 24" fill="white">
-                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="#ef4444"/>
-                <rect x="7" y="11" width="10" height="2" fill="white"/>
-              </svg>
-            </button>
-            
-            <button 
-              onClick={() => sendDirection(3)} 
-              style={{...btnStyle, background: "#3b82f6"}}
-              onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
-              onMouseUp={(e) => e.target.style.transform = "scale(1)"}
-              onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
-            >
-              <svg width="35" height="35" viewBox="0 0 24 24" fill="white">
-                <path d="M4 12l8 8v-5h8V9h-8V4z"/>
-              </svg>
+              ⬇️
             </button>
           </div>
 
-          <button
-            onClick={() => sendDirection(4)}
-            style={{...btnStyle, background: "#10b981"}}
-            onMouseDown={(e) => e.target.style.transform = "scale(0.95)"}
-            onMouseUp={(e) => e.target.style.transform = "scale(1)"}
-            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+          <button onClick={connectDirection} style={{
+            padding: "10px 16px",
+            border: "2px solid #c41e3a",
+            borderRadius: "10px",
+            fontSize: 13,
+            fontWeight: "bold",
+            cursor: "pointer",
+            color: "white",
+            background: "linear-gradient(135deg, #c41e3a 0%, #8b1428 100%)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            transition: "all 0.3s ease",
+            width: "100%",
+          }}
+          onMouseDown={(e) => e.target.style.transform = "scale(0.98)"}
+          onMouseUp={(e) => e.target.style.transform = "scale(1)"}
           >
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="white">
-              <path d="M12 20l8-8h-5V4H9v8H4z"/>
-            </svg>
+            🔌 Connect Direction 🔌
           </button>
         </div>
+      </div>
 
-        <div style={{ width: "100%" }}>
-          <button onClick={connectDirection} style={{...connectBtn, background: "#764ba2"}}>
-            🔌 Connect Direction ESP
-          </button>
+      {/* FESTIVE FOOTER */}
+      <div style={{
+        background: "linear-gradient(90deg, #0f3d1a 0%, #ffd700 50%, #0f3d1a 100%)",
+        padding: "6px 16px",
+        textAlign: "center",
+        borderTop: "3px solid #c41e3a",
+      }}>
+        <div style={{ fontSize: 12, fontWeight: "bold", color: "white", letterSpacing: 1 }}>
+          🔔 Happy Holidays! 🎁 Merry Christmas 2025 🎄 Ho Ho Ho! 🔔
         </div>
       </div>
     </div>
   );
 }
-
-// Button styling
-const btnStyle = {
-  padding: "12px",
-  width: 70,
-  height: 70,
-  margin: "0",
-  borderRadius: "14px",
-  border: "none",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-// Connect button styling
-const connectBtn = {
-  padding: "12px 20px",
-  border: "none",
-  borderRadius: "10px",
-  fontSize: 15,
-  fontWeight: "bold",
-  cursor: "pointer",
-  color: "white",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-  transition: "all 0.2s ease",
-  width: "100%",
-};
